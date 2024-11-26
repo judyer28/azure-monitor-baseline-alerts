@@ -670,7 +670,7 @@
   type: Metric
   verified: true
   visible: true
-  tags:
+  tags: []
   properties:
     metricName: Percentage CPU
     metricNamespace: Microsoft.Compute/virtualMachines
@@ -688,7 +688,7 @@
   type: Metric
   verified: true
   visible: true
-  tags:
+  tags: []
   properties:
     metricName: Data Disk IOPS Consumed Percentage
     metricNamespace: Microsoft.Compute/virtualMachines
@@ -706,7 +706,7 @@
   type: Metric
   verified: true
   visible: true
-  tags:
+  tags: []
   properties:
     metricName: OS Disk IOPS Consumed Percentage
     metricNamespace: Microsoft.Compute/virtualMachines
@@ -745,7 +745,7 @@
   type: Metric
   verified: true
   visible: true
-  tags:
+  tags: []
   properties:
     metricName: Network In Total
     metricNamespace: Microsoft.Compute/virtualMachines
@@ -763,7 +763,7 @@
   type: Metric
   verified: true
   visible: true
-  tags:
+  tags: []
   properties:
     metricName: Network Out Total
     metricNamespace: Microsoft.Compute/virtualMachines
