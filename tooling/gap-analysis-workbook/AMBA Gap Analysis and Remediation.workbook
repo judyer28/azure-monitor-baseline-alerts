@@ -419,6 +419,13 @@
     {
       "type": 1,
       "content": {
+        "json": "<br/><br/>"
+      },
+      "name": "text - 21"
+    },
+    {
+      "type": 1,
+      "content": {
         "json": "## Analyze a Single Alert\r\nUse the parameters to the right to see details and gap analysis of specific alerts.  The \"Alert Details\" table shows all of the details regarding the selected alert.  Use the \"Deploy Alert\" link in the \"Resources Missing _type_ Alert\" table to deploy a specific alert to a specific resource.  Select a row from that same table to see the Azure CLI command to deploy the alert below."
       },
       "customWidth": "30",
@@ -464,7 +471,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "OS Disk Max Burst IOPS"
+            "value": "VM Cached Bandwidth Consumed Percentage"
           },
           {
             "id": "109ed73e-3d4c-4d46-b2f8-5cbb102a6f49",
@@ -582,6 +589,38 @@
             "name": "policyEncodedURL",
             "type": 1,
             "query": "resources\r\n| limit 1\r\n| extend URI = url_encode(\"{policyTemplateURL}{policyTemplate}\")\r\n| project URI",
+            "crossComponentResources": [
+              "{subscriptions}"
+            ],
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          },
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "alertGUID",
+            "type": 1,
+            "query": "resources\r\n| limit 1\r\n| extend alertGUID = substring('{policyTemplate}', -41, 36)\r\n| project alertGUID",
+            "crossComponentResources": [
+              "{subscriptions}"
+            ],
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "id": "00827b67-7907-4b2e-a27d-2e1aa64da768"
+          },
+          {
+            "id": "00827b67-7907-4b2e-a27d-2e1aa64da768",
+            "version": "KqlParameterItem/1.0",
+            "name": "policyAssignmentName",
+            "type": 1,
+            "query": "resources\r\n| limit 1\r\n| extend policyAssignmentName = substring(replace_string(\"{metricName}\",\"/\",\" \"), 0, 23)\r\n| project policyAssignmentName",
             "crossComponentResources": [
               "{subscriptions}"
             ],
@@ -832,14 +871,61 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Policy Definition for Alert "
+        "json": "## Existing Policy Definitions for Alert {metricName}\r\n\r\n### Below is a table showing existing policy definitions and assignments for alert {metricName}.  If there are no policy definitions for the alert, use the section below to create one and the policy assignment section to assign it.  Note that the selected alert is based on what was selected in the \"Analyze a Single Alert\" section above.  "
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
         "comparison": "isEqualTo",
         "value": "policy"
       },
-      "customWidth": "25",
+      "name": "text - 22"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "policyresources\r\n| where type =~ \"microsoft.authorization/policydefinitions\"\r\n| extend alertGUID = \"{alertGUID}\"\r\n| where id has alertGUID\r\n| mv-expand properties.displayName\r\n| project Name=properties_displayName, id, alertGUID\r\n| join kind=leftouter (\r\n    policyresources\r\n    | where type =~ \"microsoft.authorization/policyassignments\"\r\n    | mv-expand properties.policyDefinitionId\r\n    | extend policyDefID = tostring(properties_policyDefinitionId)) on $left.id == $right.policyDefID\r\n| project Name, PolicyID=id, alertGUID, AssignmentID=id1 ",
+        "size": 4,
+        "noDataMessage": "No policy definitions found for this alert",
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "gridSettings": {
+          "rowLimit": 100,
+          "sortBy": [
+            {
+              "itemKey": "PolicyID",
+              "sortOrder": 1
+            }
+          ]
+        },
+        "sortBy": [
+          {
+            "itemKey": "PolicyID",
+            "sortOrder": 1
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "name": "query - 19"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Deploy Policy Definition for Alert {metricName}"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "customWidth": "50",
       "name": "text - 16"
     },
     {
@@ -906,7 +992,7 @@
     {
       "type": 1,
       "content": {
-        "json": "\r\n***This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for the policy to be deployed to.  Once deployed, assign the policy in order to have the alert auto-created for new resources or create a remediation task to create the alert for existing resources. ***\r\n\r\naz deployment mg create --no-wait --name \"Test1\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
+        "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to establish the alert for existing resources.\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n```\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -916,29 +1002,76 @@
       "name": "text - 9 - Copy"
     },
     {
-      "type": 3,
+      "type": 1,
       "content": {
-        "version": "KqlItem/1.0",
-        "query": "policyresources\r\n| where type =~ \"microsoft.authorization/policydefinitions\"\r\n| extend policyGUID = substring('{policyTemplate}', -41, 36)\r\n| where id has policyGUID\r\n| mv-expand properties.displayName\r\n| project Name=properties_displayName, id\r\n| join kind=leftouter (\r\n    policyresources\r\n    | where type =~ \"microsoft.authorization/policyassignments\"\r\n    | mv-expand properties.policyDefinitionId\r\n    | extend policyDefID = tostring(properties_policyDefinitionId)) on $left.id == $right.policyDefID\r\n| project Name, PolicyID=id, AssignmentID=id1 ",
-        "size": 0,
-        "title": "Existing AMBA Policy Definitions for {metricNamespace} {metricName}",
-        "queryType": 1,
-        "resourceType": "microsoft.resources/tenants",
-        "crossComponentResources": [
-          "value::tenant"
-        ]
+        "json": "<br>"
+      },
+      "name": "text - 23"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Deploy Policy Assignment for Alert {metricName}\r\n\r\n### If no assignment exists in the table above, you can create an assignment using the CLI command below.  Highlight the policy row in the table above to fill in the policy parameter.\r\n\r\n```shell\r\naz policy assignment create --name \"{policyAssignmentName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n```"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
         "comparison": "isEqualTo",
         "value": "policy"
       },
-      "name": "query - 19"
+      "name": "text - 20"
     },
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Single Alert to a Single Resource Using Azure CLI\r\n***Select a row from the \"Resources Missing {metricNamespace} {metricName} Alert\" table above to fill in parameters.***\r\n\r\n{depCLICmd}"
+        "json": "<br>"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "name": "text - 25"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to adress existing resources.  Use the following command to create a remediation task.  \r\n\r\n```shell\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n```"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "name": "text - 20 - Copy"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "<br>"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "name": "text - 25 - Copy"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Deploy Policy, Assignment and Remediation All in One Step for Alert {metricName}\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n\r\nsleep 30\r\n\r\naz policy assignment create --name \"{policyAssignmentName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n\r\nsleep 300\r\n\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n```"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "policy"
+      },
+      "name": "text - 26"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Deploy Single Alert {metricName} to a Single Resource Using Azure CLI\r\n### Select a row from the \"Resources Missing {metricNamespace} {metricName} Alert\" table above to fill in parameters.\r\n\r\n```shell\r\n{depCLICmd}\r\n```"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -950,7 +1083,7 @@
     {
       "type": 1,
       "content": {
-        "json": "<br/><br/>\r\n## Deploy Single Alert to Multiple Resources Using Azure CLI\r\n\r\nThe table below has the Azure CLI command for each resource listed in the Resources Missing table.  You can either copy and paste these directly into Cloud Shell or use the download arrow to the right to download all the commands to an Excel file."
+        "json": "<br/><br/>\r\n## Deploy Single Alert {metricName} to Multiple Resources Using Azure CLI\r\n\r\n### The table below has the Azure CLI command for each resource listed in the Resources Missing table.  You can either copy and paste these directly into Cloud Shell or use the download arrow to the right to download all the commands to an Excel file."
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
