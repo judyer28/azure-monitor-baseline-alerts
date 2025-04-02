@@ -471,7 +471,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "VM Cached Bandwidth Consumed Percentage"
+            "value": "Data Disk Bandwidth Consumed Percentage"
           },
           {
             "id": "109ed73e-3d4c-4d46-b2f8-5cbb102a6f49",
@@ -616,7 +616,6 @@
             "id": "00827b67-7907-4b2e-a27d-2e1aa64da768"
           },
           {
-            "id": "00827b67-7907-4b2e-a27d-2e1aa64da768",
             "version": "KqlParameterItem/1.0",
             "name": "policyAssignmentName",
             "type": 1,
@@ -629,7 +628,8 @@
               "durationMs": 86400000
             },
             "queryType": 1,
-            "resourceType": "microsoft.resourcegraph/resources"
+            "resourceType": "microsoft.resourcegraph/resources",
+            "id": "8836481f-ee1c-4491-8d73-e8af9be51673"
           }
         ],
         "style": "pills",
@@ -852,16 +852,32 @@
             "id": "70fdc37d-7393-44c9-942f-067d142cddfd",
             "cellValue": "showDepTab",
             "linkTarget": "parameter",
-            "linkLabel": "Deploy via Policy",
+            "linkLabel": "Deploy Single Alert via Policy",
             "subTarget": "policy",
+            "style": "link"
+          },
+          {
+            "id": "eb8fdded-3414-4148-b015-85f0b87399da",
+            "cellValue": "showDepTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Deploy Multiple Alerts via Policy",
+            "subTarget": "multi-policy",
             "style": "link"
           },
           {
             "id": "94bd74cc-10af-434a-ae99-dd59e2bc6b4a",
             "cellValue": "showDepTab",
             "linkTarget": "parameter",
-            "linkLabel": "Deploy via CLI",
+            "linkLabel": "Deploy Single Alert via CLI",
             "subTarget": "cli",
+            "style": "link"
+          },
+          {
+            "id": "1a4f72d5-afa0-4126-93c0-cd371dfb73b8",
+            "cellValue": "showDepTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Deploy Multiple Alerts via CLI",
+            "subTarget": "multi-cli",
             "style": "link"
           }
         ]
@@ -992,7 +1008,7 @@
     {
       "type": 1,
       "content": {
-        "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to establish the alert for existing resources.\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n```\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
+        "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to establish the alert for existing resources.\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} \\\r\n--template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n```\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1011,7 +1027,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Policy Assignment for Alert {metricName}\r\n\r\n### If no assignment exists in the table above, you can create an assignment using the CLI command below.  Highlight the policy row in the table above to fill in the policy parameter.\r\n\r\n```shell\r\naz policy assignment create --name \"{policyAssignmentName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n```"
+        "json": "## Deploy Policy Assignment for Alert {metricName}\r\n\r\n### If no assignment exists in the table above, you can create an assignment using the CLI command below.\r\n\r\n```shell\r\naz policy assignment create --name \"{policyAssignmentName}\" --display-name \"{metricName}\" \\\r\n--policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" \\\r\n--mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n```"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1035,7 +1051,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to adress existing resources.  Use the following command to create a remediation task.  \r\n\r\n```shell\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n```"
+        "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to adress existing resources.  Use the following command to create a remediation task.  \r\n\r\n```shell\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" \\\r\n--management-group \"{managementGroup}\"\r\n```"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1059,7 +1075,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Policy, Assignment and Remediation All in One Step for Alert {metricName}\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n\r\nsleep 30\r\n\r\naz policy assignment create --name \"{policyAssignmentName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n\r\nsleep 300\r\n\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n```"
+        "json": "## Deploy Policy, Assignment and Remediation All in One Step for Alert {metricName}\r\n\r\n```shell\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" \\\r\n--location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n\r\nsleep 30\r\n\r\naz policy assignment create --name \"{policyAssignmentName}\" --display-name \"{metricName}\" \\\r\n--policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" \\\r\n--mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n\r\nsleep 300\r\n\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" \\\r\n--management-group \"{managementGroup}\"\r\n```"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1067,6 +1083,48 @@
         "value": "policy"
       },
       "name": "text - 26"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "policyresources\r\n| where type =~ \"microsoft.authorization/policydefinitions\"\r\n| where id has 'managementGroups/{managementGroup}'\r\n| mv-expand amba = properties.metadata._deployed_by_amba\r\n| where amba == True\r\n| mv-expand Name = properties.displayName\r\n| mv-expand Type = properties.policyRule.if.allOf[0].equals\r\n| extend definitionText = strcat('{\\\\\"policyDefinitionId\\\\\": \\\\\"', id, '\\\\\"}') \r\n| project Type, Name, id, definitionText",
+        "size": 0,
+        "title": "Existing AMBA Policy Definitions",
+        "exportMultipleValues": true,
+        "exportedParameters": [
+          {
+            "fieldName": "definitionText",
+            "parameterName": "selectedPolicies",
+            "parameterType": 1,
+            "quote": ""
+          }
+        ],
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "sortBy": []
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "multi-policy"
+      },
+      "name": "query - 28"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "az policy set-definition create -n \"AMBA Test Policy Set 1\" --definitions \"[{selectedPolicies}]\" --management-group {managementGroup}"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "multi-policy"
+      },
+      "name": "text - 29"
     },
     {
       "type": 1,
