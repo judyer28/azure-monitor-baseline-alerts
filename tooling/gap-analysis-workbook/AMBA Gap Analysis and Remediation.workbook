@@ -453,7 +453,7 @@
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": "microsoft.operationalinsights/workspaces"
+            "value": "microsoft.network/publicipaddresses"
           },
           {
             "id": "874df32f-2fd7-416b-8394-48df4e9f0bec",
@@ -471,7 +471,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "Average_Available MBytes"
+            "value": "VipAvailability"
           },
           {
             "id": "109ed73e-3d4c-4d46-b2f8-5cbb102a6f49",
@@ -489,7 +489,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "microsoft.operationalinsights/workspaces"
+            "value": "microsoft.network/publicipaddresses"
           },
           {
             "id": "07ab6a29-408c-43a2-900a-66afd02dc233",
@@ -1151,46 +1151,30 @@
       "type": 9,
       "content": {
         "version": "KqlParameterItem/1.0",
-        "crossComponentResources": [
-          "value::tenant"
-        ],
         "parameters": [
           {
-            "id": "0e16a4b0-b4d5-48de-be34-38d281b85433",
+            "id": "934401b7-7e94-450e-9717-782b9cdc7606",
             "version": "KqlParameterItem/1.0",
             "name": "initiativeName",
-            "label": "Custom Initiative Name",
+            "label": "Initiative Name",
             "type": 1,
-            "description": "Used to provide a name for the initiative",
+            "description": "Used to name the initiative created in the command below",
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": "AMBA LAW Initiative"
-          },
-          {
-            "id": "28fd8e0f-0467-4860-b6c4-361295a051b0",
-            "version": "KqlParameterItem/1.0",
-            "name": "initiativeAssignmentName",
-            "type": 1,
-            "query": "resources\r\n| limit 1\r\n| extend initiativeAssignmentName = substring(replace_string(\"{initiativeName}\",\"/\",\" \"), 0, 23)\r\n| project initiativeAssignmentName",
-            "crossComponentResources": [
-              "value::tenant"
-            ],
-            "isHiddenWhenLocked": true,
-            "queryType": 1,
-            "resourceType": "microsoft.resources/tenants"
+            "value": ""
           }
         ],
         "style": "pills",
-        "queryType": 1,
-        "resourceType": "microsoft.resources/tenants"
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
         "comparison": "isEqualTo",
         "value": "multi-policy"
       },
-      "name": "parameters - 31"
+      "name": "parameters - 40"
     },
     {
       "type": 1,
@@ -1208,7 +1192,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "policyresources\r\n| where type == \"microsoft.authorization/policysetdefinitions\"\r\n| where id has 'managementGroups/{managementGroup}'\r\n| mv-expand amba = properties.metadata._deployed_by_amba\r\n| where amba == \"True\"\r\n| project Name=name, id\r\n| join kind=leftouter (\r\n    policyresources\r\n    | where type =~ \"microsoft.authorization/policyassignments\"\r\n    | mv-expand properties.policyDefinitionId\r\n    | extend policyDefID = tostring(properties_policyDefinitionId)) on $left.id == $right.policyDefID\r\n| project Name, id, AssignmentID=id1",
+        "query": "policyresources\r\n| where type == \"microsoft.authorization/policysetdefinitions\"\r\n| where id has 'managementGroups/{managementGroup}'\r\n| mv-expand amba = properties.metadata._deployed_by_amba\r\n| where amba == \"True\"\r\n| extend shortName = substring(replace_string(name,\"/\",\" \"), 0, 23)\r\n| project Name=name, id, shortName\r\n| join kind=leftouter (\r\n    policyresources\r\n    | where type =~ \"microsoft.authorization/policyassignments\"\r\n    | mv-expand properties.policyDefinitionId\r\n    | extend policyDefID = tostring(properties_policyDefinitionId)) on $left.id == $right.policyDefID\r\n| project Name, id, shortName, AssignmentID=id1",
         "size": 1,
         "title": "Custom AMBA Initiatives Deployed by this Workbook",
         "exportedParameters": [
@@ -1221,13 +1205,31 @@
             "fieldName": "Name",
             "parameterName": "policySetName",
             "parameterType": 1
+          },
+          {
+            "fieldName": "AssignmentID",
+            "parameterName": "policySetAssignmentID",
+            "parameterType": 1
+          },
+          {
+            "fieldName": "shortName",
+            "parameterName": "initiativeAssignmentName",
+            "parameterType": 1
           }
         ],
         "queryType": 1,
         "resourceType": "microsoft.resources/tenants",
         "crossComponentResources": [
           "value::tenant"
-        ]
+        ],
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "shortName",
+              "formatter": 5
+            }
+          ]
+        }
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1251,7 +1253,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Remediation Task for Initiative {policySetName}\r\n\r\n### A new initiative and assignment will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following table select which policies in the initiative to remediate.  "
+        "json": "<br>\r\n## Deploy Remediation Task for Initiative {policySetName}\r\n\r\n### A new initiative and assignment will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following table select which policies in the initiative to remediate.  "
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1264,7 +1266,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "policyresources\r\n| where type == \"microsoft.authorization/policysetdefinitions\"\r\n| mv-expand amba = properties.metadata._deployed_by_amba\r\n| where amba == \"True\"\r\n| mv-expand policyDefs=properties.policyDefinitions\r\n| mv-expand refID=policyDefs.policyDefinitionReferenceId\r\n| mv-expand policyDefID=policyDefs.policyDefinitionId\r\n| project refID, tostring(policyDefID)\r\n| join kind=inner policyresources on $left.policyDefID == $right.id\r\n| mv-expand displayName=properties.displayName\r\n| project displayName, refID",
+        "query": "policyresources\r\n| where id =~ '{policySetID}'\r\n| mv-expand policyDefs=properties.policyDefinitions\r\n| mv-expand refID=policyDefs.policyDefinitionReferenceId\r\n| mv-expand policyDefID=policyDefs.policyDefinitionId\r\n| project refID, tostring(policyDefID)\r\n| join kind=inner policyresources on $left.policyDefID == $right.id\r\n| mv-expand displayName=properties.displayName\r\n| project displayName, refID",
         "size": 1,
         "title": "Policies Included in Initiative",
         "exportMultipleValues": true,
@@ -1291,7 +1293,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\r\n| limit 1\r\n| extend refID = split('{refID}', \",\")\r\n| mv-expand refID = refID\r\n| project refID\r\n| extend cmds = strcat('az policy remediation create --name ', refID, ' --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{initiativeAssignmentName}\" --management-group \"{managementGroup}\" --definition-reference-id ', refID) \r\n| project cmds",
+        "query": "resources\r\n| limit 1\r\n| extend refID = split('{refID}', \",\")\r\n| mv-expand refID = refID\r\n| project refID\r\n| extend cmds = strcat('az policy remediation create --name ', refID, ' --policy-assignment \"{policySetAssignmentID}\" --management-group \"{managementGroup}\" --definition-reference-id ', refID) \r\n| project cmds",
         "size": 0,
         "title": "Aggregated Commands to Deploy Remediation Tasks",
         "queryType": 1,
@@ -1350,7 +1352,7 @@
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": "microsoft.operationalinsights/workspaces"
+            "value": "microsoft.compute/virtualmachinescalesets"
           }
         ],
         "style": "pills",
