@@ -453,7 +453,7 @@
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": "microsoft.network/publicipaddresses"
+            "value": "microsoft.keyvault/vaults"
           },
           {
             "id": "874df32f-2fd7-416b-8394-48df4e9f0bec",
@@ -471,7 +471,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "VipAvailability"
+            "value": "Availability"
           },
           {
             "id": "109ed73e-3d4c-4d46-b2f8-5cbb102a6f49",
@@ -489,7 +489,7 @@
               "durationMs": 86400000
             },
             "queryType": 8,
-            "value": "microsoft.network/publicipaddresses"
+            "value": "microsoft.keyvault/vaults"
           },
           {
             "id": "07ab6a29-408c-43a2-900a-66afd02dc233",
@@ -1000,7 +1000,7 @@
         ],
         "style": "pills",
         "queryType": 1,
-        "resourceType": "microsoft.operationalinsights/workspaces"
+        "resourceType": "microsoft.resourcegraph/resources"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1016,7 +1016,7 @@
     {
       "type": 1,
       "content": {
-        "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to establish the alert for existing resources.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n</span>\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
+        "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName}.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to create the alert for existing resources.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n</span>\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1059,7 +1059,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to adress existing resources.  Use the following command to create a remediation task.  \r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n</span>"
+        "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to adress existing resources.  Use the following command to create a remediation task.\r\n***NOTE: If you just created the policy assignment, you should wait at least 15 minutes or more before creating the remediation task.  This is ensures the assignment has had time to evaluate compliance.***\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n</span>"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1079,18 +1079,6 @@
         "value": "policy"
       },
       "name": "text - 25 - Copy"
-    },
-    {
-      "type": 1,
-      "content": {
-        "json": "## Deploy Policy, Assignment and Remediation All in One Step for Alert {metricName}\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz deployment mg create --no-wait --name \"{alertGUID}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n</span><br><br>\r\n<span style=\"background-color: WhiteSmoke;\">\r\nsleep 15\r\n</span><br><br>\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy assignment create --name \"{policyAssignmentName}\" --display-name \"AMBA {metricName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n</span><br><br>\r\n<span style=\"background-color: WhiteSmoke;\">\r\nsleep 300\r\n</span><br><br>\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n</span>"
-      },
-      "conditionalVisibility": {
-        "parameterName": "showDepTab",
-        "comparison": "isEqualTo",
-        "value": "policy"
-      },
-      "name": "text - 26"
     },
     {
       "type": 1,
@@ -1148,6 +1136,18 @@
       "name": "query - 28"
     },
     {
+      "type": 1,
+      "content": {
+        "json": "<br>"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "multi-policy"
+      },
+      "name": "text - 42"
+    },
+    {
       "type": 9,
       "content": {
         "version": "KqlParameterItem/1.0",
@@ -1174,7 +1174,69 @@
         "comparison": "isEqualTo",
         "value": "multi-policy"
       },
+      "customWidth": "25",
       "name": "parameters - 40"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "3d9cd5cd-fda0-4cb8-9714-a202973d17b6",
+            "version": "KqlParameterItem/1.0",
+            "name": "managementGroup",
+            "label": "Management Group",
+            "type": 2,
+            "description": "Used as scope for policy definition deployment",
+            "query": "resourcecontainers\r\n| where type == \"microsoft.management/managementgroups\"\r\n| project name",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "resourceTypeFilter": {
+                "microsoft.management/managementgroups": true
+              },
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": "NorthwindTradersBU"
+          },
+          {
+            "id": "c291baa0-2ebb-4296-8fc4-f70e9abce22a",
+            "version": "KqlParameterItem/1.0",
+            "name": "location",
+            "label": "Location",
+            "type": 8,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "includeAll": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "eastus2"
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "multi-policy"
+      },
+      "customWidth": "50",
+      "name": "parameters - 15 - Copy",
+      "styleSettings": {
+        "maxWidth": "50"
+      }
     },
     {
       "type": 1,
@@ -1253,7 +1315,7 @@
     {
       "type": 1,
       "content": {
-        "json": "<br>\r\n## Deploy Remediation Task for Initiative {policySetName}\r\n\r\n### A new initiative and assignment will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following table select which policies in the initiative to remediate.  "
+        "json": "<br>\r\n## Deploy Remediation Task for Initiative {policySetName}\r\n\r\n### A new initiative and assignment will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following table select which policies in the initiative to remediate.  \r\n***NOTE: If you just created the initiative assignment, you should wait at least 15 minutes or more before creating the remediation task.  This is ensures the assignment has had time to evaluate compliance.***"
       },
       "conditionalVisibility": {
         "parameterName": "showDepTab",
@@ -1352,7 +1414,7 @@
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": "microsoft.compute/virtualmachinescalesets"
+            "value": "microsoft.keyvault/vaults"
           }
         ],
         "style": "pills",
@@ -1404,6 +1466,67 @@
       "name": "query - 37"
     },
     {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "653a6f23-c03e-4736-ab4a-3e9e0d8fca42",
+            "version": "KqlParameterItem/1.0",
+            "name": "managementGroup",
+            "label": "Management Group",
+            "type": 2,
+            "description": "Used as scope for policy definition deployment",
+            "query": "resourcecontainers\r\n| where type == \"microsoft.management/managementgroups\"\r\n| project name",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "resourceTypeFilter": {
+                "microsoft.management/managementgroups": true
+              },
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": "NorthwindTradersBU"
+          },
+          {
+            "id": "aa5f855f-67cf-4e20-b3e4-a9bd78961f41",
+            "version": "KqlParameterItem/1.0",
+            "name": "location",
+            "label": "Location",
+            "type": 8,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "includeAll": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "eastus2"
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "conditionalVisibility": {
+        "parameterName": "showDepTab",
+        "comparison": "isEqualTo",
+        "value": "library"
+      },
+      "customWidth": "50",
+      "name": "parameters - 15 - Copy",
+      "styleSettings": {
+        "maxWidth": "50"
+      }
+    },
+    {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
@@ -1416,13 +1539,10 @@
           "value::tenant"
         ],
         "gridSettings": {
-          "formatters": [
+          "labelSettings": [
             {
-              "columnMatch": "cmds",
-              "formatter": 1,
-              "formatOptions": {
-                "customColumnWidthSetting": "75%"
-              }
+              "columnId": "cmds",
+              "label": "Commands"
             }
           ]
         }
