@@ -511,7 +511,7 @@
                     "durationMs": 86400000
                   },
                   "queryType": 8,
-                  "value": "CPU Credits Remaining"
+                  "value": "Available Memory Bytes"
                 },
                 {
                   "id": "109ed73e-3d4c-4d46-b2f8-5cbb102a6f49",
@@ -1616,6 +1616,13 @@
               "groupType": "editable",
               "items": [
                 {
+                  "type": 1,
+                  "content": {
+                    "json": "## Deploy Alerts via CLI\r\n### Select an alert using the resource type, metric alert name and metric alert namespace."
+                  },
+                  "name": "text - 5"
+                },
+                {
                   "type": 9,
                   "content": {
                     "version": "KqlParameterItem/1.0",
@@ -1652,7 +1659,7 @@
                           "durationMs": 86400000
                         },
                         "queryType": 8,
-                        "value": "Available Memory Bytes"
+                        "value": "CPU Credits Remaining"
                       },
                       {
                         "id": "0e1fba3f-7ec0-4cba-9c6f-e59a089e3e49",
