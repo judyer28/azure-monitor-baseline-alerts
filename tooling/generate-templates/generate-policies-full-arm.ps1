@@ -55,6 +55,12 @@ process {
                     $alertTemplate = $alertTemplate -replace "##POLICY_DISPLAY_NAME##", "Deploy $($serviceName) $($alert.properties.metricName) Alert"
                     $alertTemplate = $alertTemplate -replace "##POLICY_DESCRIPTION##", "Policy to Audit/Deploy $($serviceName) $($alert.properties.metricName) Alert"
                 }
+                $metricNamespaceSplit = $alert.properties.metricNamespace -split "/"
+                if ($metricNamespaceSplit.Count -gt 2){
+                  $alertTemplate = $alertTemplate -replace "##TARGET_SCOPE##", "$($metricNamespaceSplit[0])/$($metricNamespaceSplit[1])"
+                } else {
+                  $alertTemplate = $alertTemplate -replace "##TARGET_SCOPE##", $alert.properties.metricNamespace
+                }
                 $category = $alert.properties.metricNamespace -replace "Microsoft.", ""
                 $category = $category -replace "/.+", ""
                 $alertTemplate = $alertTemplate -replace "##POLICY_CATEGORY##", $category
@@ -103,7 +109,12 @@ process {
                 $alertTemplate = $alertTemplate -replace "##POLICY_DISPLAY_NAME##", "Deploy $($alert.name) Alert"
                 $alertTemplate = $alertTemplate -replace "##POLICY_DESCRIPTION##", "Policy to Audit/Deploy $($alert.name) Alert"
               }
-
+              $metricNamespaceSplit = $alert.properties.metricNamespace -split "/"
+              if ($metricNamespaceSplit.Count -gt 2){
+                $alertTemplate = $alertTemplate -replace "##TARGET_SCOPE##", "$($metricNamespaceSplit[0])/$($metricNamespaceSplit[1])"
+              } else {
+                $alertTemplate = $alertTemplate -replace "##TARGET_SCOPE##", $alert.properties.metricNamespace
+              }
               $parts = $policyPathName -split '\\'
               $secondToLastIndex = $parts.Length - 2
               $thirdToLastIndex = $parts.Length - 3
