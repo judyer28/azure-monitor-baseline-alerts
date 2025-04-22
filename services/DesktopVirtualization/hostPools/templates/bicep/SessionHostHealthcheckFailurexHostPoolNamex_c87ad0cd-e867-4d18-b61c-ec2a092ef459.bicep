@@ -1,3 +1,7 @@
+@description('Location for the alert.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('Name of the alert')
 @minLength(1)
 param alertName string
@@ -15,6 +19,7 @@ param checkWorkspaceAlertsStorageConfigured bool = false
 @minLength(1)
 param resourceId string
 
+/* Removing muteActionsDuration and defaulting autoMitigate to true
 @description('Mute actions for the chosen period of time (in ISO 8601 duration format) after the alert is fired.')
 @allowed([
   'PT1M'
@@ -26,7 +31,7 @@ param resourceId string
   'PT12H'
   'PT24H'
 ])
-param muteActionsDuration string
+param muteActionsDuration string */
 
 @description('Severity of alert {0,1,2,3,4}')
 @allowed([
@@ -43,7 +48,7 @@ param autoMitigate bool = true
 
 @description('Name of the metric used in the comparison to activate the alert.')
 @minLength(1)
-param query string = 'let MapToDesc = (idx: long) { case(idx == 0, "DomainJoin", idx == 1, "DomainTrust", idx == 2, "FSLogix", idx == 3, "SxSStack", idx == 4, "URLCheck", idx == 5, "GenevaAgent", idx == 6, "DomainReachable", idx == 7, "WebRTCRedirector", idx == 8, "SxSStackEncryption", idx == 9, "IMDSReachable", idx == 10, "MSIXPackageStaging", "InvalidIndex")}; WVDAgentHealthStatus | where TimeGenerated > ago(10m) | where Status != \\'Available\\' | where AllowNewSessions = True | extend CheckFailed = parse_json(SessionHostHealthCheckResult) | mv-expand CheckFailed | where CheckFailed.AdditionalFailureDetails.ErrorCode != 0 | extend HealthCheckName = tolong(CheckFailed.HealthCheckName) | extend HealthCheckResult = tolong(CheckFailed.HealthCheckResult) | extend HealthCheckDesc = MapToDesc(HealthCheckName) | where HealthCheckDesc != \\'InvalidIndex\\' | where _ResourceId contains "xHostPoolNamex" | parse _ResourceId with "/subscriptions/" subscription "/resourcegroups/" HostPoolResourceGroup "/providers/microsoft.desktopvirtualization/hostpools/" HostPool | parse SessionHostResourceId with "/subscriptions/" HostSubscription "/resourceGroups/" SessionHostRG " /providers/Microsoft.Compute/virtualMachines/" SessionHostName'
+param query string = 'let MapToDesc = (idx: long) { case(idx == 0, "DomainJoin", idx == 1, "DomainTrust", idx == 2, "FSLogix", idx == 3, "SxSStack", idx == 4, "URLCheck", idx == 5, "GenevaAgent", idx == 6, "DomainReachable", idx == 7, "WebRTCRedirector", idx == 8, "SxSStackEncryption", idx == 9, "IMDSReachable", idx == 10, "MSIXPackageStaging", "InvalidIndex")}; WVDAgentHealthStatus | where TimeGenerated > ago(10m) | where Status != "Available" | where AllowNewSessions = True | extend CheckFailed = parse_json(SessionHostHealthCheckResult) | mv-expand CheckFailed | where CheckFailed.AdditionalFailureDetails.ErrorCode != 0 | extend HealthCheckName = tolong(CheckFailed.HealthCheckName) | extend HealthCheckResult = tolong(CheckFailed.HealthCheckResult) | extend HealthCheckDesc = MapToDesc(HealthCheckName) | where HealthCheckDesc != "InvalidIndex" | where _ResourceId contains "xHostPoolNamex" | parse _ResourceId with "/subscriptions/" subscription "/resourcegroups/" HostPoolResourceGroup "/providers/microsoft.desktopvirtualization/hostpools/" HostPool | parse SessionHostResourceId with "/subscriptions/" HostSubscription "/resourceGroups/" SessionHostRG " /providers/Microsoft.Compute/virtualMachines/" SessionHostName'
 
 @description('Name of the measure column used in the alert evaluation.')
 param metricMeasureColumn string = ''
@@ -84,22 +89,36 @@ param timeAggregation string = 'Count'
 @allowed([
   'PT1M'
   'PT5M'
+  'PT10M'
   'PT15M'
   'PT30M'
+  'PT45M'
   'PT1H'
+  'PT2H'
+  'PT3H'
+  'PT4H'
+  'PT5H'
   'PT6H'
-  'PT12H'
-  'PT24H'
   'P1D'
+  'P2D'
 ])
 param windowSize string = 'PT15M'
 
 @description('how often the metric alert is evaluated represented in ISO 8601 duration format')
 @allowed([
+  'PT1M'
   'PT5M'
+  'PT10M'
   'PT15M'
   'PT30M'
+  'PT45M'
   'PT1H'
+  'PT2H'
+  'PT3H'
+  'PT4H'
+  'PT5H'
+  'PT6H'
+  'P1D'
 ])
 param evaluationFrequency string = 'PT15M'
 
@@ -113,9 +132,9 @@ param currentDateTimeUtcNow string = utcNow()
 ])
 param telemetryOptOut string = 'No'
 
-resource alert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {
+resource alert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   name: alertName
-  location: resourceGroup().location
+  location: location
   tags: {
     _deployed_by_amba: 'true'
   }
@@ -165,7 +184,7 @@ resource alert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {
         }
       ]
     }
-    muteActionsDuration: muteActionsDuration
+    //muteActionsDuration: muteActionsDuration
     autoMitigate: autoMitigate
     checkWorkspaceAlertsStorageConfigured: checkWorkspaceAlertsStorageConfigured
   }

@@ -40,14 +40,10 @@
           "description": "Window size for the alert"
         },
         "allowedValues": [
-          "PT1M",
           "PT5M",
           "PT15M",
           "PT30M",
-          "PT1H",
-          "PT6H",
-          "PT12H",
-          "P1D"
+          "PT1H"
         ],
         "defaultValue": "##WINDOW_SIZE##"
       },
@@ -157,6 +153,7 @@
             "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
           ],
           "type": "Microsoft.Insights/metricAlerts",
+          "name": "[[concat(field('name'), '-##POLICY_EFFECT_NAME##')]",
           "existenceCondition": {
             "allOf": [
               {
@@ -169,7 +166,7 @@
               },
               {
                 "field": "Microsoft.Insights/metricalerts/scopes[*]",
-                "equals": "[[concat(subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/##METRIC_NAMESPACE##/', field('fullName'))]"
+                "equals": "[[field('id')]]"
               },
               {
                 "field": "Microsoft.Insights/metricAlerts/enabled",
@@ -258,7 +255,7 @@
                   {
                     "type": "Microsoft.Insights/metricAlerts",
                     "apiVersion": "2018-03-01",
-                    "name": "[[concat(parameters('resourceName'), '-##METRIC_NAME##')]",
+                    "name": "[[concat(parameters('resourceName'), '-##POLICY_EFFECT_NAME##')]",
                     "location": "global",
                     "tags": {
                       "_deployed_by_amba": true

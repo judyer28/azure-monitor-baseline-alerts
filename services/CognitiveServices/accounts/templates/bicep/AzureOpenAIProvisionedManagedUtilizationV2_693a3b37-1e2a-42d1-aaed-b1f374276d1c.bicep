@@ -3,7 +3,7 @@
 param alertName string
 
 @description('Description of alert')
-param alertDescription string = 'Utilization % for a provisoned-managed deployment, calculated as (PTUs consumed / PTUs deployed) x 100.'
+param alertDescription string = 'Utilization % for a provisioned-managed deployment, calculated as (PTUs consumed / PTUs deployed) x 100.'
 
 @description('Array of Azure resource Ids. For example - /subscriptions/00000000-0000-0000-0000-0000-00000000/resourceGroup/resource-group-name/Microsoft.compute/virtualMachines/vm-name')
 @minLength(1)
@@ -50,7 +50,7 @@ param threshold int = 80
   'Total'
   'Count'
 ])
-param timeAggregation string = 'Total'
+param timeAggregation string = 'Average'
 
 @description('Period of time used to monitor alert activity based on the threshold. Must be between one minute and one day. ISO 8601 duration format.')
 @allowed([
@@ -61,7 +61,6 @@ param timeAggregation string = 'Total'
   'PT1H'
   'PT6H'
   'PT12H'
-  'PT24H'
   'P1D'
 ])
 param windowSize string = 'PT5M'
@@ -107,7 +106,7 @@ resource metricAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
         {
           name: '1st criterion'
           metricName: 'AzureOpenAIProvisionedManagedUtilizationV2'
-          dimensions: [[]]
+          dimensions: []
           operator: operator
           threshold: threshold
           timeAggregation: timeAggregation

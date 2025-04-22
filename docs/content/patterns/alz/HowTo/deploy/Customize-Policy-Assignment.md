@@ -4,6 +4,12 @@ geekdocCollapseSection: true
 weight: 20
 ---
 
+### In this page
+
+> [Introduction](../Customize-Policy-Assignment#introduction) </br>
+> [Modify initiative assignment](../Customize-Policy-Assignment#modify-initiative-assignment) </br>
+> [Next steps](../Customize-Policy-Assignment#next-steps)
+
 ## Introduction
 
 This document provides guidance on customizing policy assignments for the policies and initiatives in this repository. While default configurations are available as described in [Introduction to deploying the AMBA-ALZ pattern](../Introduction-to-deploying-the-ALZ-Pattern), you may need to adjust these settings to meet specific monitoring requirements or to implement alerts incrementally in an existing environment.
@@ -16,7 +22,7 @@ To adjust alert thresholds for one or more metric alerts, specify the relevant p
 
 Two versions of the parameter file are available:
 
-1. [alzArm.param.json](https://github.com/azure/azure-monitor-baseline-alerts/blob/2024-12-10/patterns/alz/alzArm.param.json) aligned with the latest release.
+1. [alzArm.param.json](https://github.com/azure/azure-monitor-baseline-alerts/blob/2025-04-04/patterns/alz/alzArm.param.json) aligned with the latest release.
 2. [alzArm.param.json](https://github.com/azure/azure-monitor-baseline-alerts/blob/main/patterns/alz/alzArm.param.json) aligned with the main branch.
 
 ### Applying Changes to the Parameter File
@@ -88,7 +94,7 @@ The following parameters can be changed for activity log, service health alert, 
 | ALZMonitorResourceGroupTags | Tags to be added to the resource group |
 | ALZMonitorResourceGroupLocation | Location of the resource group for the alerts |
 
-These parameters specify the resource group where activity log alerts will be placed. If the resource group does not exist, it will be created. The `tags` parameter can accept multiple tags if needed, but tags are only applied at the resource group level. By default, the `tags` parameter is set to a single tag with the name *environment* and the value *test*. You can add more tags as required or leave it empty.
+These parameters specify the resource group where activity log alerts will be placed. If the resource group does not exist, it will be created. The `tags` parameter can accept multiple tags if needed, but tags are only applied at the resource group level. By default, the `tags` parameter is set to a single tag with the name _environment_ and the value _test_. You can add more tags as required or leave it empty.
 
 ### Disabling Policies
 
@@ -96,7 +102,7 @@ For options on disabling policies, visit [Disabling Policies](../../Disabling-Po
 
 ## Next Steps
 
-- To deploy using Azure Portal UI, visit [Deploy via the Azure Portal (Preview)](../Deploy-via-Azure-Portal-UI)
+- To deploy using Azure Portal UI, visit [Deploy via the Azure Portal Accelerator](../Deploy-via-Azure-Portal-UI)
 - To deploy with GitHub Actions, visit [Deploy with GitHub Actions](../Deploy-with-GitHub-Actions)
 - To deploy with Azure DevOps Pipelines, visit [Deploy with Azure Pipelines](../Deploy-with-Azure-Pipelines)
 - To deploy with Azure CLI, visit [Deploy with Azure CLI](../Deploy-with-Azure-CLI)

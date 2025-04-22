@@ -1,3 +1,7 @@
+@description('Location for the alert.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('Name of the alert')
 @minLength(1)
 param alertName string
@@ -15,6 +19,7 @@ param checkWorkspaceAlertsStorageConfigured bool = false
 @minLength(1)
 param resourceId string
 
+/* Removing muteActionsDuration and defaulting autoMitigate to true
 @description('Mute actions for the chosen period of time (in ISO 8601 duration format) after the alert is fired.')
 @allowed([
   'PT1M'
@@ -26,7 +31,7 @@ param resourceId string
   'PT12H'
   'PT24H'
 ])
-param muteActionsDuration string
+param muteActionsDuration string */
 
 @description('Severity of alert {0,1,2,3,4}')
 @allowed([
@@ -43,7 +48,7 @@ param autoMitigate bool = true
 
 @description('Name of the metric used in the comparison to activate the alert.')
 @minLength(1)
-param query string = 'AzureDiagnostics | where Category has "JobStreams" and StreamType_s == "Output" and RunbookName_s == "AvdHostPoolLogData" | sort by TimeGenerated | where TimeGenerated > ago(15m) | extend HostPoolName=tostring(split(ResultDescription, \'|\')[0]) | extend ResourceGroup=tostring(split(ResultDescription, \'|\')[1]) | extend Type=tostring(split(ResultDescription, \'|\')[2]) | extend NumberSessionHosts=toint(split(ResultDescription, \'|\')[4]) | extend UserSessionsActive=toint(split(ResultDescription, \'|\')[7]) | extend NumPersonalUnhealthy=toint(split(ResultDescription, \'|\')[10]) | extend PersonalSessionHost=extract_json("$.SessionHost", tostring(split(ResultDescription, \'|\')[11]), typeof(string)) | extend PersonalAssignedUser=extract_json("$.AssignedUser", tostring(split(ResultDescription, \'|\')[11]), typeof(string)) | where HostPoolName =~ \'xHostPoolNamex\' | where Type == \'Personal\' | where NumPersonalUnhealthy > 0 '
+param query string = 'AzureDiagnostics | where Category has "JobStreams" and StreamType_s == "Output" and RunbookName_s == "AvdHostPoolLogData" | sort by TimeGenerated | where TimeGenerated > ago(15m) | extend HostPoolName=tostring(split(ResultDescription, "|")[0]) | extend ResourceGroup=tostring(split(ResultDescription, "|")[1]) | extend Type=tostring(split(ResultDescription, "|")[2]) | extend NumberSessionHosts=toint(split(ResultDescription, "|")[4]) | extend UserSessionsActive=toint(split(ResultDescription, "|")[7]) | extend NumPersonalUnhealthy=toint(split(ResultDescription, "|")[10]) | extend PersonalSessionHost=extract_json("$.SessionHost", tostring(split(ResultDescription, "|")[11]), typeof(string)) | extend PersonalAssignedUser=extract_json("$.AssignedUser", tostring(split(ResultDescription, "|")[11]), typeof(string)) | where HostPoolName =~ "xHostPoolNamex" | where Type == "Personal" | where NumPersonalUnhealthy > 0 '
 
 @description('Name of the measure column used in the alert evaluation.')
 param metricMeasureColumn string = ''
@@ -84,22 +89,36 @@ param timeAggregation string = 'Count'
 @allowed([
   'PT1M'
   'PT5M'
+  'PT10M'
   'PT15M'
   'PT30M'
+  'PT45M'
   'PT1H'
+  'PT2H'
+  'PT3H'
+  'PT4H'
+  'PT5H'
   'PT6H'
-  'PT12H'
-  'PT24H'
   'P1D'
+  'P2D'
 ])
 param windowSize string = 'PT5M'
 
 @description('how often the metric alert is evaluated represented in ISO 8601 duration format')
 @allowed([
+  'PT1M'
   'PT5M'
+  'PT10M'
   'PT15M'
   'PT30M'
+  'PT45M'
   'PT1H'
+  'PT2H'
+  'PT3H'
+  'PT4H'
+  'PT5H'
+  'PT6H'
+  'P1D'
 ])
 param evaluationFrequency string = 'PT5M'
 
@@ -113,9 +132,9 @@ param currentDateTimeUtcNow string = utcNow()
 ])
 param telemetryOptOut string = 'No'
 
-resource alert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {
+resource alert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   name: alertName
-  location: resourceGroup().location
+  location: location
   tags: {
     _deployed_by_amba: 'true'
   }
@@ -165,7 +184,7 @@ resource alert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {
         }
       ]
     }
-    muteActionsDuration: muteActionsDuration
+    //muteActionsDuration: muteActionsDuration
     autoMitigate: autoMitigate
     checkWorkspaceAlertsStorageConfigured: checkWorkspaceAlertsStorageConfigured
   }

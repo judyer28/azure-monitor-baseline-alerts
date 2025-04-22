@@ -5,10 +5,10 @@
   "properties": {
     "policyType": "Custom",
     "mode": "All",
-    "displayName": "Deploy Application Insights Throttling Limit Reached Alert (Preview)",
+    "displayName": "Deploy Azure Monitor Baseline Alerts (AMBA-ALZ) - Application Insights Throttling Limit Reached Alert",
     "description": "Policy to audit/deploy Application Insights Throttling Limit Reached Alert",
     "metadata": {
-      "version": "1.0.0",
+      "version": "1.2.1",
       "category": "Monitoring",
       "source": "https://github.com/Azure/azure-monitor-baseline-alerts/",
       "alzCloudEnvironments": [
@@ -117,6 +117,18 @@
           "false"
         ],
         "defaultValue": "true"
+      },
+      "checkWorkspaceAlertsStorageConfigured": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Require a workspace linked storage",
+          "description": "Don't create the alert rule if the Log Analytics workspace doesn't have a configured linked storage account (relevant if you're using Customer Managed Keys)."
+        },
+        "allowedValues": [
+          "true",
+          "false"
+        ],
+        "defaultValue": "false"
       },
       "enabled": {
         "type": "String",
@@ -231,6 +243,10 @@
                 "equals": "[[parameters('autoMitigate')]"
               },
               {
+                "field": "Microsoft.Insights/scheduledQueryRules/checkWorkspaceAlertsStorageConfigured",
+                "equals": "[[parameters('checkWorkspaceAlertsStorageConfigured')]"
+              },
+              {
                 "field": "Microsoft.Insights/scheduledQueryRules/criteria.allOf[*].threshold",
                 "equals": 0
               },
@@ -252,7 +268,7 @@
               },
               {
                 "field": "Microsoft.Insights/scheduledQueryRules/criteria.allOf[*].query",
-                "equals": "[[format('let policyThresholdString = \"{2}\"; let overridenResource = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | project _ResourceId = tolower(id), tags | where tags contains \"_amba-Throttling-threshold-override_\"); let excludedResources = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | where parse_json(tostring(tags.[\"{0}\"])) in~ (\"{1}\") | project _ResourceId = tolower(id)); let appInsightsResources = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | project _ResourceId = tolower(id), name); AppSystemEvents | where _ResourceId =~ \"{3}\" | where _ResourceId !in~ (excludedResources) | summarize numOfEvents = sum(toint(Measurements[\"BillingTelemetryCount\"])) by _ResourceId, Type, bin(TimeGenerated, 1h) | join hint.remote=left kind=leftouter overridenResource on _ResourceId | project-away _ResourceId1 | extend appliedThresholdString = iif(tags contains \"_amba-Throttling-threshold-override_\", tags.[\"_amba-Throttling-threshold-override_\"], policyThresholdString) | extend appliedThreshold = toint(appliedThresholdString) | where numOfEvents > appliedThreshold | join hint.remote=left kind=inner appInsightsResources on _ResourceId | project TimeGenerated, _ResourceId, name, numOfEvents', parameters('MonitorDisableTagName'), join(parameters('MonitorDisableTagValues'), '\",\"'), parameters('threshold'), field('id'))]"
+                "equals": "[[format('let policyThresholdString = \"{0}\"; let resourceTagging = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | where tags.[\"{1}\"] !in~ (\"{2}\") | project _ResourceId = tolower(id), resourceTags = tags, name); AppSystemEvents | where _ResourceId =~ \"{3}\" | summarize numOfEvents = sum(toint(Measurements[\"BillingTelemetryCount\"])) by _ResourceId, Type, bin(TimeGenerated, 1h) | join hint.remote=left kind=inner resourceTagging on _ResourceId | project-away _ResourceId1 | extend newThresholdString = tostring(resourceTags.[\"{4}\"]) | extend appliedThreshold = iif(isempty(newThresholdString), toint(policyThresholdString), toint(newThresholdString)) | where numOfEvents > appliedThreshold | project TimeGenerated, _ResourceId, name, numOfEvents', parameters('threshold'), parameters('MonitorDisableTagName'), join(parameters('MonitorDisableTagValues'), '\",\"'), field('id'), '_amba-Throttling-threshold-override_')]"
               },
               {
                 "field": "identity.userAssignedIdentities",
@@ -301,6 +317,9 @@
                     "type": "String"
                   },
                   "autoMitigate": {
+                    "type": "String"
+                  },
+                  "checkWorkspaceAlertsStorageConfigured": {
                     "type": "String"
                   },
                   "enabled": {
@@ -357,7 +376,7 @@
                       "criteria": {
                         "allOf": [
                           {
-                            "query": "[[format('let policyThresholdString = \"{2}\"; let overridenResource = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | project _ResourceId = tolower(id), tags | where tags contains \"_amba-Throttling-threshold-override_\"); let excludedResources = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | where parse_json(tostring(tags.[\"{0}\"])) in~ (\"{1}\") | project _ResourceId = tolower(id)); let appInsightsResources = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | project _ResourceId = tolower(id), name); AppSystemEvents | where _ResourceId =~ \"{3}\" | where _ResourceId !in~ (excludedResources) | summarize numOfEvents = sum(toint(Measurements[\"BillingTelemetryCount\"])) by _ResourceId, Type, bin(TimeGenerated, 1h) | join hint.remote=left kind=leftouter overridenResource on _ResourceId | project-away _ResourceId1 | extend appliedThresholdString = iif(tags contains \"_amba-Throttling-threshold-override_\", tags.[\"_amba-Throttling-threshold-override_\"], policyThresholdString) | extend appliedThreshold = toint(appliedThresholdString) | where numOfEvents > appliedThreshold | join hint.remote=left kind=inner appInsightsResources on _ResourceId | project TimeGenerated, _ResourceId, name, numOfEvents', parameters('MonitorDisableTagName'), join(parameters('MonitorDisableTagValues'), '\",\"'), parameters('threshold'), parameters('resourceId'))]",
+                            "query": "[[format('let policyThresholdString = \"{0}\"; let resourceTagging = (arg(\"\").resources | where type =~ \"Microsoft.Insights/components\" | where tags.[\"{1}\"] !in~ (\"{2}\") | project _ResourceId = tolower(id), resourceTags = tags, name); AppSystemEvents | where _ResourceId =~ \"{3}\" | summarize numOfEvents = sum(toint(Measurements[\"BillingTelemetryCount\"])) by _ResourceId, Type, bin(TimeGenerated, 1h) | join hint.remote=left kind=inner resourceTagging on _ResourceId | project-away _ResourceId1 | extend newThresholdString = tostring(resourceTags.[\"{4}\"]) | extend appliedThreshold = iif(isempty(newThresholdString), toint(policyThresholdString), toint(newThresholdString)) | where numOfEvents > appliedThreshold | project TimeGenerated, _ResourceId, name, numOfEvents', parameters('threshold'), parameters('MonitorDisableTagName'), join(parameters('MonitorDisableTagValues'), '\",\"'), parameters('resourceId'), '_amba-Throttling-threshold-override_')]",
                             "threshold": 0,
                             "operator": "[[parameters('operator')]",
                             "dimensions": [
@@ -379,6 +398,7 @@
                         ]
                       },
                       "autoMitigate": "[[parameters('autoMitigate')]",
+                      "checkWorkspaceAlertsStorageConfigured": "[[parameters('checkWorkspaceAlertsStorageConfigured')]",
                       "parameters": {
                         "UAMIResourceId": {
                           "value": "[[parameters('UAMIResourceId')]"
@@ -394,6 +414,9 @@
                         },
                         "autoMitigate": {
                           "value": "[[parameters('autoMitigate')]"
+                        },
+                        "checkWorkspaceAlertsStorageConfigured": {
+                          "value": "[[parameters('checkWorkspaceAlertsStorageConfigured')]"
                         },
                         "enabled": {
                           "value": "[[parameters('enabled')]"
@@ -448,6 +471,9 @@
                 },
                 "autoMitigate": {
                   "value": "[[parameters('autoMitigate')]"
+                },
+                "checkWorkspaceAlertsStorageConfigured": {
+                  "value": "[[parameters('checkWorkspaceAlertsStorageConfigured')]"
                 },
                 "enabled": {
                   "value": "[[parameters('enabled')]"

@@ -59,7 +59,7 @@
     },
     "operator": {
       "type": "string",
-      "defaultValue": "GreaterThanOrEqual",
+      "defaultValue": "GreaterThan",
       "allowedValues": [
         "Equals",
         "GreaterThan",
@@ -73,7 +73,7 @@
     },
     "threshold": {
       "type": "string",
-      "defaultValue": "1",
+      "defaultValue": "0",
       "metadata": {
         "description": "The threshold value at which the alert is activated."
       }
@@ -103,8 +103,7 @@
         "PT1H",
         "PT6H",
         "PT12H",
-        "PT24H",
-        "PT1D"
+        "P1D"
       ],
       "metadata": {
         "description": "Period of time used to monitor alert activity based on the threshold. Must be between one minute and one day. ISO 8601 duration format."
