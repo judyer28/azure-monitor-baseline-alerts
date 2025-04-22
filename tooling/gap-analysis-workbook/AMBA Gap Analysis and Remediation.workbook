@@ -34,9 +34,7 @@
             "timeContext": {
               "durationMs": 86400000
             },
-            "value": [
-              "/subscriptions/0e432b0f-5d11-4227-b3a6-765340e23fff"
-            ]
+            "value": []
           },
           {
             "id": "0b886f16-0a18-4abf-82fc-121175dee655",
@@ -61,9 +59,7 @@
             "defaultValue": "value::all",
             "queryType": 1,
             "resourceType": "microsoft.resourcegraph/resources",
-            "value": [
-              "/subscriptions/0e432b0f-5d11-4227-b3a6-765340e23fff/resourceGroups/northwind-traders-rg"
-            ]
+            "value": []
           },
           {
             "id": "0f546d01-3ec5-40d2-a8a7-e10100d38d3f",
@@ -1051,7 +1047,7 @@
                         },
                         "queryType": 1,
                         "resourceType": "microsoft.resources/tenants",
-                        "value": "NorthwindTradersBU"
+                        "value": null
                       },
                       {
                         "id": "9ad9cc1f-6bd3-403f-b308-6b3826fb40c3",
@@ -1066,7 +1062,7 @@
                         "timeContext": {
                           "durationMs": 86400000
                         },
-                        "value": "eastus2"
+                        "value": null
                       }
                     ],
                     "style": "pills",
@@ -1241,7 +1237,7 @@
                         "timeContext": {
                           "durationMs": 86400000
                         },
-                        "value": ""
+                        "value": "My First AMBA Initiative"
                       }
                     ],
                     "style": "pills",
@@ -1279,7 +1275,7 @@
                         },
                         "queryType": 1,
                         "resourceType": "microsoft.resources/tenants",
-                        "value": "NorthwindTradersBU"
+                        "value": null
                       },
                       {
                         "id": "c291baa0-2ebb-4296-8fc4-f70e9abce22a",
@@ -1294,7 +1290,7 @@
                         "timeContext": {
                           "durationMs": 86400000
                         },
-                        "value": "eastus2"
+                        "value": null
                       }
                     ],
                     "style": "pills",
@@ -1548,7 +1544,7 @@
                         },
                         "queryType": 1,
                         "resourceType": "microsoft.resources/tenants",
-                        "value": "NorthwindTradersBU"
+                        "value": null
                       },
                       {
                         "id": "aa5f855f-67cf-4e20-b3e4-a9bd78961f41",
@@ -1563,7 +1559,7 @@
                         "timeContext": {
                           "durationMs": 86400000
                         },
-                        "value": "eastus2"
+                        "value": null
                       }
                     ],
                     "style": "pills",
@@ -1659,7 +1655,7 @@
                           "durationMs": 86400000
                         },
                         "queryType": 8,
-                        "value": "CPU Credits Remaining"
+                        "value": "Available Memory Bytes"
                       },
                       {
                         "id": "0e1fba3f-7ec0-4cba-9c6f-e59a089e3e49",
