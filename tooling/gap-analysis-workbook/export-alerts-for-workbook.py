@@ -18,6 +18,9 @@ def outputToJsonFile(data, filename):
   alertListString = ""
   for providerKey in data.keys():
     for typeKey in data[providerKey].keys():
+      # Skip if there are no alerts for this resource type
+      if len(data[providerKey][typeKey]) == 0:
+        continue
       typeListString = typeListString + '"microsoft.' + providerKey.lower() + "/" + typeKey.lower() + '",'
       alertListString = alertListString + '"microsoft.' + providerKey.lower() + "/" + typeKey.lower() + '","'
       for alert in data[providerKey][typeKey]:
