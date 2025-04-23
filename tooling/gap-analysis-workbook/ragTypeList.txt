@@ -1,0 +1,1 @@
+"microsoft.cognitiveservices/accounts","microsoft.documentdb/databaseaccounts","microsoft.keyvault/vaults","microsoft.search/searchservices","microsoft.storage/storageaccounts","microsoft.web/sites"

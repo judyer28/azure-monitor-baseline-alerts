@@ -1,0 +1,1 @@
+"microsoft.cognitiveservices/accounts","microsoft.compute/virtualmachines","microsoft.documentdb/databaseaccounts","microsoft.keyvault/vaults","microsoft.machinelearningservices/workspaces","microsoft.network/expressroutecircuits","microsoft.network/expressroutegateways","microsoft.network/loadbalancers","microsoft.network/publicipaddresses","microsoft.storage/storageaccounts"

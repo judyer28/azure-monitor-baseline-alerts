@@ -1,0 +1,1 @@
+"microsoft.batch/batchaccounts","microsoft.compute/virtualmachines","microsoft.compute/virtualmachinescalesets","microsoft.netapp/netappaccounts","microsoft.storage/storageaccounts","microsoft.storagecache/amlfilesystems"
