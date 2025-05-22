@@ -259,6 +259,37 @@
       "name": "links - 4"
     },
     {
+      "type": 11,
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "links": [
+          {
+            "id": "7fefa596-bb63-487a-80bd-0a865fc1921e",
+            "cellValue": "showAnalysisTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Metric Alerts",
+            "subTarget": "Metric",
+            "style": "link"
+          },
+          {
+            "id": "1efe3fa0-e3e2-43aa-b96f-27ea20f04fc4",
+            "cellValue": "showAnalysisTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Service Health Alerts",
+            "subTarget": "Service",
+            "style": "link"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "showTopTab",
+        "comparison": "isEqualTo",
+        "value": "Analysis"
+      },
+      "name": "Gap Analysis Tabs"
+    },
+    {
       "type": 12,
       "content": {
         "version": "NotebookGroup/1.0",
@@ -267,7 +298,7 @@
           {
             "type": 1,
             "content": {
-              "json": "### The first two graphs below show the total AMBA gap analysis and a breakdown by resource type.  Select one of the nodes to set the resource type for the \"Total AMBA Gap Analysis for Resource Type _type_\" chart and the \"Alerts Missing for Resources of Type _type_\"  table."
+              "json": "## Metric Alerts Gap Analysis\r\n### The first two graphs below show the total AMBA gap analysis and a breakdown by resource type.  Select one of the nodes to set the resource type for the \"Total AMBA Gap Analysis for Resource Type _type_\" chart and the \"Alerts Missing for Resources of Type _type_\"  table."
             },
             "name": "text - 11"
           },
@@ -275,7 +306,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(id =~ scopes, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | distinct type\r\n    | where type in~ ({typeList})\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(totalAlertsByType),type1, type)\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | extend alertTable = pack({alertList})\r\n    | where array_index_of(bag_keys(alertTable), type) != -1\r\n    | extend alerts = split(alertTable[type], \",\")\r\n    | extend alertCount = array_length(alerts)\r\n    | summarize numResourcesByType=count() by type, alertCount\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| extend missingAlerts = iff(isnull(missingAlerts), 0, missingAlerts)\r\n| extend totalAlertsByType = iff(isnull(totalAlertsByType), numResourcesByType*alertCount, totalAlertsByType)\r\n| extend implementedAlerts = iff(isnull(implementedAlerts), totalAlertsByType-missingAlerts, implementedAlerts)\r\n| summarize totalMissingAlerts=sum(missingAlerts), totalImplementedAlerts=sum(implementedAlerts)\r\n| extend category = pack_array(\"totalMissingAlerts\", \"totalImplementedAlerts\")\r\n| mv-expand category\r\n| project tostring(category), numAlerts=iff(category==\"totalMissingAlerts\", totalMissingAlerts, totalImplementedAlerts)",
+              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(scopes contains_cs id, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | distinct type\r\n    | where type in~ ({typeList})\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(totalAlertsByType),type1, type)\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | extend alertTable = pack({alertList})\r\n    | where array_index_of(bag_keys(alertTable), type) != -1\r\n    | extend alerts = split(alertTable[type], \",\")\r\n    | extend alertCount = array_length(alerts)\r\n    | summarize numResourcesByType=count() by type, alertCount\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| extend missingAlerts = iff(isnull(missingAlerts), 0, missingAlerts)\r\n| extend totalAlertsByType = iff(isnull(totalAlertsByType), numResourcesByType*alertCount, totalAlertsByType)\r\n| extend implementedAlerts = iff(isnull(implementedAlerts), totalAlertsByType-missingAlerts, implementedAlerts)\r\n| summarize totalMissingAlerts=sum(missingAlerts), totalImplementedAlerts=sum(implementedAlerts)\r\n| extend category = pack_array(\"totalMissingAlerts\", \"totalImplementedAlerts\")\r\n| mv-expand category\r\n| project tostring(category), numAlerts=iff(category==\"totalMissingAlerts\", totalMissingAlerts, totalImplementedAlerts)",
               "size": 2,
               "title": "Total AMBA Gap Analysis",
               "queryType": 1,
@@ -327,7 +358,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(id =~ scopes, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| extend percentImplemented = (implementedAlerts * 100) / totalAlertsByType\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | distinct type\r\n    | where type in~ ({typeList})\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(percentImplemented),type1, type)\r\n| extend percentImplemented = iff(isnull(percentImplemented),100, percentImplemented)\r\n| extend provider=substring(type,indexof(type, \".\") + 1,indexof(type, \"/\") - (indexof(type, \".\") + 1))\r\n| project type, typeName=substring(type, indexof(type, \"/\") + 1), provider, percentImplemented\r\n| order by typeName asc",
+              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(scopes contains_cs id, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| extend percentImplemented = (implementedAlerts * 100) / totalAlertsByType\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | distinct type\r\n    | where type in~ ({typeList})\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(percentImplemented),type1, type)\r\n| extend percentImplemented = iff(isnull(percentImplemented),100, percentImplemented)\r\n| extend provider=substring(type,indexof(type, \".\") + 1,indexof(type, \"/\") - (indexof(type, \".\") + 1))\r\n| project type, typeName=substring(type, indexof(type, \"/\") + 1), provider, percentImplemented\r\n| order by typeName asc",
               "size": 2,
               "title": "Percentage of Alerts Implemented by Azure Service",
               "exportFieldName": "type",
@@ -431,7 +462,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{typeFromHC}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(id =~ scopes, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | distinct type\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(totalAlertsByType),type1, type)\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | extend alertTable = pack({alertList})\r\n    | where array_index_of(bag_keys(alertTable), type) != -1\r\n    | extend alerts = split(alertTable[type], \",\")\r\n    | extend alertCount = array_length(alerts)\r\n    | summarize numResourcesByType=count() by type, alertCount\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| extend missingAlerts = iff(isnull(missingAlerts), 0, missingAlerts)\r\n| extend totalAlertsByType = iff(isnull(totalAlertsByType), numResourcesByType*alertCount, totalAlertsByType)\r\n| extend implementedAlerts = iff(isnull(implementedAlerts), totalAlertsByType-missingAlerts, implementedAlerts)\r\n| summarize totalMissingAlerts=sum(missingAlerts), totalImplementedAlerts=sum(implementedAlerts)\r\n| extend category = pack_array(\"totalMissingAlerts\", \"totalImplementedAlerts\")\r\n| mv-expand category\r\n| project tostring(category), numAlerts=iff(category==\"totalMissingAlerts\", totalMissingAlerts, totalImplementedAlerts)",
+              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{typeFromHC}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(scopes contains_cs id, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project-away implementedList\r\n| summarize missingAlerts=count() by type, totalAlertsByType=alertCount*numResourcesByType\r\n| extend implementedAlerts = totalAlertsByType-missingAlerts\r\n| join kind=fullouter (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | distinct type\r\n    ) on $left.type == $right.type\r\n| extend type = iff(isnull(totalAlertsByType),type1, type)\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | extend alertTable = pack({alertList})\r\n    | where array_index_of(bag_keys(alertTable), type) != -1\r\n    | extend alerts = split(alertTable[type], \",\")\r\n    | extend alertCount = array_length(alerts)\r\n    | summarize numResourcesByType=count() by type, alertCount\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| extend missingAlerts = iff(isnull(missingAlerts), 0, missingAlerts)\r\n| extend totalAlertsByType = iff(isnull(totalAlertsByType), numResourcesByType*alertCount, totalAlertsByType)\r\n| extend implementedAlerts = iff(isnull(implementedAlerts), totalAlertsByType-missingAlerts, implementedAlerts)\r\n| summarize totalMissingAlerts=sum(missingAlerts), totalImplementedAlerts=sum(implementedAlerts)\r\n| extend category = pack_array(\"totalMissingAlerts\", \"totalImplementedAlerts\")\r\n| mv-expand category\r\n| project tostring(category), numAlerts=iff(category==\"totalMissingAlerts\", totalMissingAlerts, totalImplementedAlerts)",
               "size": 2,
               "title": "Total AMBA Gap Analysis for Resource Type {typeFromHC}",
               "queryType": 1,
@@ -483,7 +514,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{typeFromHC}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(id =~ scopes, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project id, name, resourceGroup, location, missingAlert",
+              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{typeFromHC}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{typeFromHC}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(scopes contains_cs id, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project id, name, resourceGroup, location, missingAlert",
               "size": 2,
               "title": "Alerts Missing for Resources of Type {typeFromHC}",
               "queryType": 1,
@@ -774,7 +805,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{Type}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| where alerts =~ \"{metricName}\"\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{Type}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | where metricName =~ \"{metricName}\"\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(id =~ scopes, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project id, name, resourceGroup, location, missingAlert\r\n| extend rgID = (split(id, \"/providers\"))[0]\r\n| project id, resourceGroup, location, rgID, alertName=tostring(missingAlert)\r\n| extend subscriptionId = (split(id,'/'))[2]",
+              "query": "resources\r\n| extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n| where rg in~ ({resourceGroups})\r\n| where type =~ \"{Type}\"\r\n| extend alertTable = pack({alertList})\r\n| where array_index_of(bag_keys(alertTable), type) != -1\r\n| extend alerts = split(alertTable[type], \",\")\r\n| extend alertCount = array_length(alerts)\r\n| mv-expand alerts\r\n| where alerts =~ \"{metricName}\"\r\n| project id, name, type=tolower(type), location, resourceGroup, subscriptionId, tostring(alerts), alertCount\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ \"{Type}\"\r\n    | summarize numResourcesByType=count() by type\r\n    ) on $left.type == $right.type\r\n| project-away type1\r\n| join kind=leftouter  (\r\n    resources\r\n    | extend rg = strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup)\r\n    | where rg in~ ({resourceGroups})\r\n    | where type =~ 'microsoft.insights/metricalerts'\r\n    | extend scopes = properties.scopes \r\n    | mv-expand scopes\r\n    | extend metricName = tostring(properties.criteria.allOf[0].metricName)\r\n    | where metricName =~ \"{metricName}\"\r\n    | extend targetType = tolower(properties.targetResourceType)\r\n    | extend targetRegion = tostring(properties.targetResourceRegion)\r\n    | project metricName, targetType, targetRegion, scopes\r\n    ) on $left.alerts == $right.metricName\r\n| where ((type =~ targetType) or (isempty(targetType))) and ((location =~ targetRegion) or (isempty(targetRegion)))\r\n| extend isSubScope = iff(array_length(split(scopes,'/'))==3, true, false)\r\n| extend subMatch = iff(isSubScope == true and scopes == strcat('/subscriptions/', subscriptionId), true, false)\r\n| extend isRgScope = iff(array_length(split(scopes,'/'))==5, true, false)\r\n| extend rgMatch = iff(isRgScope == true and scopes == strcat('/subscriptions/', subscriptionId, '/resourcegroups/', resourceGroup), true, false)\r\n| extend idMatch = iff(scopes contains_cs id, true, false)\r\n| extend implemented = iff(subMatch or rgMatch or idMatch, true, false)\r\n| summarize implementedList=make_list(implemented) by id, name, type, location, resourceGroup, subscriptionId, missingAlert=tostring(alerts), alertCount, numResourcesByType\r\n| where array_index_of(implementedList,true) == -1\r\n| project id, name, resourceGroup, location, missingAlert\r\n| extend rgID = (split(id, \"/providers\"))[0]\r\n| project id, resourceGroup, location, rgID, alertName=tostring(missingAlert)\r\n| extend subscriptionId = (split(id,'/'))[2]",
               "size": 2,
               "title": "Resources Missing {metricNamespace} {metricName} Alert",
               "exportFieldName": "depCLICmd",
@@ -919,12 +950,119 @@
         ],
         "exportParameters": true
       },
-      "conditionalVisibility": {
-        "parameterName": "showTopTab",
-        "comparison": "isEqualTo",
-        "value": "Analysis"
+      "conditionalVisibilities": [
+        {
+          "parameterName": "showTopTab",
+          "comparison": "isEqualTo",
+          "value": "Analysis"
+        },
+        {
+          "parameterName": "showAnalysisTab",
+          "comparison": "isEqualTo",
+          "value": "Metric"
+        }
+      ],
+      "name": "Metric Analysis Group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Service Health Alerts Gap Analysis\r\n### This table shows service health alerts and which event types are setup for each subscription. "
+            },
+            "name": "text - 0"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "resourcecontainers\r\n| where type == 'microsoft.resources/subscriptions'\r\n| project subscriptionId = id, subscriptionName = name\r\n| join kind=leftouter (\r\n  resources\r\n  | where type == \"microsoft.insights/activitylogalerts\" and properties.condition contains \"ServiceHealth\"\r\n  | extend subscriptionId = strcat('/subscriptions/',subscriptionId)\r\n  | extend Maintenance = iff(properties.condition contains_cs \"Maintenance\", 1, 0)\r\n  | extend Security = iff(properties.condition contains_cs \"Security\", 1, 0)\r\n  | extend Incident = iff(properties.condition contains_cs \"Incident\", 1, 0)\r\n  | extend Informational = iff(properties.condition contains_cs \"Informational\", 1, 0)\r\n  | extend All = iff(properties.condition !contains_cs \"anyOf\", 1, 0)\r\n  | project subscriptionId, Alert=name, All, Maintenance, Security, Incident, Informational\r\n) on subscriptionId\r\n|project subscriptionId, Alert, All, Maintenance, Security, Incident, Informational\r\n|summarize All=sum(All), Maintenance=sum(Maintenance), Security=sum(Security), Incident=sum(Incident), Informational=sum(Informational) by subscriptionId\r\n|extend AllEvents=iff(All>0, \"success\", \"warning\")\r\n|extend ServiceIssue=iff(All>0 or Incident>0, \"success\", \"warning\")\r\n|extend PlannedMaintenance=iff(All>0 or Maintenance>0, \"success\", \"warning\")\r\n|extend HealthAdvisory=iff(All>0 or Informational>0, \"success\", \"warning\")\r\n|extend SecurityAdvisory=iff(All>0 or Security>0, \"success\", \"warning\")\r\n|project subscriptionId, AllEvents, ServiceIssue, PlannedMaintenance, HealthAdvisory, SecurityAdvisory",
+              "size": 0,
+              "queryType": 1,
+              "resourceType": "microsoft.resources/tenants",
+              "crossComponentResources": [
+                "value::tenant"
+              ],
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "subscriptionId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AllEvents",
+                    "formatter": 11
+                  },
+                  {
+                    "columnMatch": "ServiceIssue",
+                    "formatter": 11
+                  },
+                  {
+                    "columnMatch": "PlannedMaintenance",
+                    "formatter": 11
+                  },
+                  {
+                    "columnMatch": "HealthAdvisory",
+                    "formatter": 11
+                  },
+                  {
+                    "columnMatch": "SecurityAdvisory",
+                    "formatter": 11
+                  }
+                ],
+                "labelSettings": [
+                  {
+                    "columnId": "subscriptionId",
+                    "label": "Subscription"
+                  },
+                  {
+                    "columnId": "AllEvents",
+                    "label": "All Events"
+                  },
+                  {
+                    "columnId": "ServiceIssue",
+                    "label": "Service Issue"
+                  },
+                  {
+                    "columnId": "PlannedMaintenance",
+                    "label": "Planned Maintenance"
+                  },
+                  {
+                    "columnId": "HealthAdvisory",
+                    "label": "Health Advisory"
+                  },
+                  {
+                    "columnId": "SecurityAdvisory",
+                    "label": "Security Advisory"
+                  }
+                ]
+              }
+            },
+            "name": "query - 1"
+          }
+        ]
       },
-      "name": "Analysis Group"
+      "conditionalVisibilities": [
+        {
+          "parameterName": "showTopTab",
+          "comparison": "isEqualTo",
+          "value": "Analysis"
+        },
+        {
+          "parameterName": "showAnalysisTab",
+          "comparison": "isEqualTo",
+          "value": "Service"
+        }
+      ],
+      "name": "Service Health Analysis Group"
     },
     {
       "type": 12,
