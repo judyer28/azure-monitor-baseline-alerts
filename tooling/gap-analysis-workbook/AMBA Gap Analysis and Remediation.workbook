@@ -630,7 +630,7 @@
             "content": {
               "version": "KqlParameterItem/1.0",
               "crossComponentResources": [
-                "{subscriptions}"
+                "value::tenant"
               ],
               "parameters": [
                 {
@@ -638,15 +638,21 @@
                   "version": "KqlParameterItem/1.0",
                   "name": "Type",
                   "label": "Resource Type",
-                  "type": 7,
+                  "type": 2,
                   "isRequired": true,
+                  "query": "resources\r\n| take 1\r\n| extend types = replace('\\\"', '', '{allTypeList}')\r\n| extend types = split(types, \",\")\r\n| mvexpand types\r\n| project types",
+                  "crossComponentResources": [
+                    "value::tenant"
+                  ],
                   "typeSettings": {
                     "additionalResourceOptions": [],
-                    "includeAll": true
+                    "showDefault": false
                   },
                   "timeContext": {
                     "durationMs": 86400000
                   },
+                  "queryType": 1,
+                  "resourceType": "microsoft.resources/tenants",
                   "value": "microsoft.compute/virtualmachines"
                 },
                 {
@@ -740,7 +746,7 @@
               ],
               "style": "pills",
               "queryType": 1,
-              "resourceType": "microsoft.resourcegraph/resources"
+              "resourceType": "microsoft.resources/tenants"
             },
             "name": "singleAlertDeploymentParams"
           },
@@ -981,7 +987,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resourcecontainers\r\n| where type == 'microsoft.resources/subscriptions'\r\n| project subscriptionId = id, subscriptionName = name\r\n| join kind=leftouter (\r\n  resources\r\n  | where type == \"microsoft.insights/activitylogalerts\" and properties.condition contains \"ServiceHealth\"\r\n  | extend subscriptionId = strcat('/subscriptions/',subscriptionId)\r\n  | extend Maintenance = iff(properties.condition contains_cs \"Maintenance\", 1, 0)\r\n  | extend Security = iff(properties.condition contains_cs \"Security\", 1, 0)\r\n  | extend Incident = iff(properties.condition contains_cs \"Incident\", 1, 0)\r\n  | extend Informational = iff(properties.condition contains_cs \"Informational\", 1, 0)\r\n  | extend All = iff(properties.condition !contains_cs \"anyOf\", 1, 0)\r\n  | project subscriptionId, Alert=name, All, Maintenance, Security, Incident, Informational\r\n) on subscriptionId\r\n|project subscriptionId, Alert, All, Maintenance, Security, Incident, Informational\r\n|summarize All=sum(All), Maintenance=sum(Maintenance), Security=sum(Security), Incident=sum(Incident), Informational=sum(Informational) by subscriptionId\r\n|extend AllEvents=iff(All>0, \"success\", \"warning\")\r\n|extend ServiceIssue=iff(All>0 or Incident>0, \"success\", \"warning\")\r\n|extend PlannedMaintenance=iff(All>0 or Maintenance>0, \"success\", \"warning\")\r\n|extend HealthAdvisory=iff(All>0 or Informational>0, \"success\", \"warning\")\r\n|extend SecurityAdvisory=iff(All>0 or Security>0, \"success\", \"warning\")\r\n|project subscriptionId, AllEvents, ServiceIssue, PlannedMaintenance, HealthAdvisory, SecurityAdvisory",
+              "query": "resourcecontainers\r\n| where type == 'microsoft.resources/subscriptions'\r\n| where id in~ ({subscriptions})\r\n| project subscriptionId = id, subscriptionName = name\r\n| join kind=leftouter (\r\n  resources\r\n  | where type == \"microsoft.insights/activitylogalerts\" and properties.condition contains \"ServiceHealth\"\r\n  | extend subscriptionId = strcat('/subscriptions/',subscriptionId)\r\n  | extend Maintenance = iff(properties.condition contains_cs \"Maintenance\", 1, 0)\r\n  | extend Security = iff(properties.condition contains_cs \"Security\", 1, 0)\r\n  | extend Incident = iff(properties.condition contains_cs \"Incident\", 1, 0)\r\n  | extend Informational = iff(properties.condition contains_cs \"Informational\", 1, 0)\r\n  | extend All = iff(properties.condition !contains_cs \"anyOf\", 1, 0)\r\n  | project subscriptionId, Alert=name, All, Maintenance, Security, Incident, Informational\r\n) on subscriptionId\r\n|project subscriptionId, Alert, All, Maintenance, Security, Incident, Informational\r\n|summarize All=sum(All), Maintenance=sum(Maintenance), Security=sum(Security), Incident=sum(Incident), Informational=sum(Informational) by subscriptionId\r\n|extend AllEvents=iff(All>0, \"success\", \"warning\")\r\n|extend ServiceIssue=iff(All>0 or Incident>0, \"success\", \"warning\")\r\n|extend PlannedMaintenance=iff(All>0 or Maintenance>0, \"success\", \"warning\")\r\n|extend HealthAdvisory=iff(All>0 or Informational>0, \"success\", \"warning\")\r\n|extend SecurityAdvisory=iff(All>0 or Security>0, \"success\", \"warning\")\r\n|project subscriptionId, AllEvents, ServiceIssue, PlannedMaintenance, HealthAdvisory, SecurityAdvisory",
               "size": 0,
               "queryType": 1,
               "resourceType": "microsoft.resources/tenants",
@@ -1130,7 +1136,7 @@
                   "content": {
                     "version": "KqlParameterItem/1.0",
                     "crossComponentResources": [
-                      "{subscriptions}"
+                      "value::tenant"
                     ],
                     "parameters": [
                       {
@@ -1138,15 +1144,21 @@
                         "version": "KqlParameterItem/1.0",
                         "name": "Type",
                         "label": "Resource Type",
-                        "type": 7,
+                        "type": 2,
                         "isRequired": true,
+                        "query": "resources\r\n| take 1\r\n| extend types = replace('\\\"', '', '{allTypeList}')\r\n| extend types = split(types, \",\")\r\n| mvexpand types\r\n| project types",
+                        "crossComponentResources": [
+                          "value::tenant"
+                        ],
                         "typeSettings": {
                           "additionalResourceOptions": [],
-                          "includeAll": true
+                          "showDefault": false
                         },
                         "timeContext": {
                           "durationMs": 86400000
                         },
+                        "queryType": 1,
+                        "resourceType": "microsoft.resources/tenants",
                         "value": "microsoft.compute/virtualmachines"
                       },
                       {
@@ -1265,7 +1277,7 @@
                     ],
                     "style": "pills",
                     "queryType": 1,
-                    "resourceType": "microsoft.operationalinsights/workspaces"
+                    "resourceType": "microsoft.resources/tenants"
                   },
                   "name": "singleAlertDeploymentParams - Copy"
                 },
@@ -1343,7 +1355,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName} if one does not already exist in the Existing Policy Definition table below.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to create the alert for existing resources.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz deployment mg create --no-wait --name \"{alertGUIDForPolicy}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n</span>\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
+                    "json": "\r\n### This will create a policy definition for alert {metricNamespace} {metricName} if one does not already exist in the Existing Policy Definition table below.  Select a management group and location for deploying the policy. Once deployed, assign the policy to ensure that the alert is automatically created for new resources, or generate a remediation task to create the alert for existing resources.\r\n\r\naz deployment mg create --no-wait --name \"{alertGUIDForPolicy}\" --management-group-id \"{managementGroup}\" --location {location} --template-uri \"{policyTemplateURL}{policyTemplate}\"\r\n</span>\r\n\r\n[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/{policyEncodedURL})\r\n"
                   },
                   "name": "text - 9 - Copy"
                 },
@@ -1401,7 +1413,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "## Deploy Policy Assignment for Alert {metricName}\r\n\r\n### If no assignment exists in the table above, you can create an assignment using the CLI command below.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy assignment create --name \"{policyAssignmentName}\" --display-name \"AMBA {metricName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUIDForPolicy}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n</span>"
+                    "json": "## Deploy Policy Assignment for Alert {metricName}\r\n\r\n### If no assignment exists in the table above, you can create an assignment using the CLI command below.\r\n\r\naz policy assignment create --name \"{policyAssignmentName}\" --display-name \"AMBA {metricName}\" --policy \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyDefinitions/{alertGUIDForPolicy}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n</span>"
                   },
                   "name": "text - 20"
                 },
@@ -1415,7 +1427,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following command to create a remediation task.\r\n***NOTE: If you just created the policy assignment, you should wait at least 15 minutes or more before creating the remediation task.  This ensures the assignment has had time to evaluate compliance.***\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n</span>"
+                    "json": "## Deploy Remediation Task for Alert {metricName}\r\n\r\n### A new policy definition and assignement will only create alerts for new resources.  A remediation task will be needed to address existing resources.  Use the following command to create a remediation task.\r\n***NOTE: If you just created the policy assignment, you should wait at least 15 minutes or more before creating the remediation task.  This ensures the assignment has had time to evaluate compliance.***\r\n\r\naz policy remediation create --name \"{policyAssignmentName}\" --policy-assignment \"/providers/Microsoft.Management/managementGroups/{managementGroup}/providers/Microsoft.Authorization/policyAssignments/{policyAssignmentName}\" --management-group \"{managementGroup}\"\r\n</span>"
                   },
                   "name": "text - 20 - Copy"
                 }
@@ -1578,7 +1590,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "<span style=\"background-color: WhiteSmoke;\">\r\naz policy set-definition create -n \"{initiativeName}\" --definitions \"[{selectedPolicies}]\" --management-group {managementGroup} --metadata _deployed_by_amba=True\r\n</span><br>"
+                    "json": "az policy set-definition create -n \"{initiativeName}\" --definitions \"[{selectedPolicies}]\" --management-group {managementGroup} --metadata _deployed_by_amba=True\r\n</span><br>"
                   },
                   "name": "text - 29"
                 },
@@ -1630,7 +1642,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "## Deploy Policy Initiative Assignment for Initiative {policySetName}\r\n\r\n### Select the initiative above that you want to assign.  If you just created it, you may need to refresh the workbook to see it.  If no assignment exists for the initiaitive in the table above, you can create an assignment using the CLI command below.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\naz policy assignment create --name \"{initiativeAssignmentName}\" --display-name \"{policySetName}\" --policy-set-definition \"{policySetID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n</span>"
+                    "json": "## Deploy Policy Initiative Assignment for Initiative {policySetName}\r\n\r\n### Select the initiative above that you want to assign.  If you just created it, you may need to refresh the workbook to see it.  If no assignment exists for the initiaitive in the table above, you can create an assignment using the CLI command below.\r\n\r\naz policy assignment create --name \"{initiativeAssignmentName}\" --display-name \"{policySetName}\" --policy-set-definition \"{policySetID}\" --mi-system-assigned --identity-scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\" --role \"Contributor\" --location \"{location}\"  --scope \"/providers/Microsoft.Management/managementGroups/{managementGroup}\"\r\n</span>"
                   },
                   "name": "text - 33"
                 },
@@ -1725,26 +1737,35 @@
                   "type": 9,
                   "content": {
                     "version": "KqlParameterItem/1.0",
+                    "crossComponentResources": [
+                      "value::tenant"
+                    ],
                     "parameters": [
                       {
                         "id": "a4be9f3f-d27c-47be-8dbe-1e4d5145f7d9",
                         "version": "KqlParameterItem/1.0",
                         "name": "resourceTypeForLibrary",
                         "label": "Resource Type",
-                        "type": 7,
+                        "type": 2,
                         "description": "Used to filter the list of AMBA alerts shown in table below",
+                        "query": "resources\r\n| take 1\r\n| extend types = replace('\\\"', '', '{allTypeList}')\r\n| extend types = split(types, \",\")\r\n| mvexpand types\r\n| project types",
+                        "crossComponentResources": [
+                          "value::tenant"
+                        ],
                         "typeSettings": {
                           "additionalResourceOptions": [],
-                          "includeAll": true
+                          "showDefault": false
                         },
                         "timeContext": {
                           "durationMs": 86400000
                         },
+                        "queryType": 1,
+                        "resourceType": "microsoft.resources/tenants",
                         "value": "microsoft.compute/virtualmachines"
                       }
                     ],
                     "style": "pills",
-                    "queryType": 0,
+                    "queryType": 1,
                     "resourceType": "microsoft.resources/tenants"
                   },
                   "customWidth": "25",
@@ -1887,21 +1908,30 @@
                   "type": 9,
                   "content": {
                     "version": "KqlParameterItem/1.0",
+                    "crossComponentResources": [
+                      "value::tenant"
+                    ],
                     "parameters": [
                       {
                         "id": "b260f635-7d36-4857-9d36-7403376a694f",
                         "version": "KqlParameterItem/1.0",
                         "name": "Type",
                         "label": "Resource Type",
-                        "type": 7,
+                        "type": 2,
                         "isRequired": true,
+                        "query": "resources\r\n| take 1\r\n| extend types = replace('\\\"', '', '{allTypeList}')\r\n| extend types = split(types, \",\")\r\n| mvexpand types\r\n| project types",
+                        "crossComponentResources": [
+                          "value::tenant"
+                        ],
                         "typeSettings": {
                           "additionalResourceOptions": [],
-                          "includeAll": true
+                          "showDefault": false
                         },
                         "timeContext": {
                           "durationMs": 86400000
                         },
+                        "queryType": 1,
+                        "resourceType": "microsoft.resources/tenants",
                         "value": "microsoft.compute/virtualmachines"
                       },
                       {
@@ -1986,7 +2016,8 @@
                       }
                     ],
                     "style": "pills",
-                    "queryType": 8
+                    "queryType": 1,
+                    "resourceType": "microsoft.resources/tenants"
                   },
                   "customWidth": "70",
                   "name": "singleAlertDeploymentParams - Copy"
@@ -2132,7 +2163,7 @@
                 {
                   "type": 1,
                   "content": {
-                    "json": "## Deploy Single Alert {metricName} to a Single Resource Using Azure CLI\r\n### Select a row from the \"Resources Missing {metricNamespace} {metricName} Alert\" table above to fill in parameters.\r\n\r\n<span style=\"background-color: WhiteSmoke;\">\r\n{depCLICmd}\r\n</span>"
+                    "json": "## Deploy Single Alert {metricName} to a Single Resource Using Azure CLI\r\n### Select a row from the \"Resources Missing {metricNamespace} {metricName} Alert\" table above to fill in parameters.\r\n\r\n{depCLICmd}\r\n</span>"
                   },
                   "name": "text - 9"
                 },
